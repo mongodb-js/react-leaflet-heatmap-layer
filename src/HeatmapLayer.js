@@ -296,20 +296,6 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
   redraw(): void {
     const r = this._heatmap._r;
     const size = this.props.leaflet.map.getSize();
-
-    const maxIntensity = this.props.max === undefined
-                            ? 1
-                            : this.getMax(this.props);
-
-    const maxZoom = this.props.maxZoom === undefined
-                        ? this.props.leaflet.map.getMaxZoom()
-                        : this.getMaxZoom(this.props);
-
-    const v = 1 / Math.pow(
-      2,
-      Math.max(0, Math.min(maxZoom - this.props.leaflet.map.getZoom(), 12)) / 2
-    );
-
     const cellSize = r / 2;
     const panePos = this.props.leaflet.map._getMapPanePos();
     const offsetX = panePos.x % cellSize;
@@ -326,11 +312,12 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
       map(filterUndefined(row), (cell) => [
         Math.round(cell[0]),
         Math.round(cell[1]),
-        Math.min(cell[2], maxIntensity),
-        cell[3]
+        cell[2]
       ]).concat(result),
       []
     );
+
+    let totalMax = 0;
 
     const accumulateInGrid = (points, leafletMap, bounds) => reduce(points, (grid, point) => {
       const latLng = [getLat(point), getLng(point)];
@@ -351,15 +338,15 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
       const cell = grid[y][x];
 
       const alt = getIntensity(point);
-      const k = alt * v;
 
       if (!cell) {
-        grid[y][x] = [p.x, p.y, k, 1];
+        grid[y][x] = [p.x, p.y, alt];
+        totalMax = Math.max(alt, totalMax);
       } else {
-        cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k); // x
-        cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k); // y
-        cell[2] += k; // accumulated intensity value
-        cell[3] += 1;
+        cell[0] = (cell[0] * cell[2] + p.x * alt) / (cell[2] + alt); // x
+        cell[1] = (cell[1] * cell[2] + p.y * alt) / (cell[2] + alt); // y
+        cell[2] += alt;
+        totalMax = Math.max(cell[2], totalMax);
       }
 
       return grid;
@@ -368,17 +355,17 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     const getBounds = () => new L.Bounds(L.point([-r, -r]), size.add([r, r]));
 
     const getDataForHeatmap = (points, leafletMap) => roundResults(
-        accumulateInGrid(
-          points,
-          leafletMap,
-          getBounds(leafletMap)
-        )
-      );
+      accumulateInGrid(
+        points,
+        leafletMap,
+        getBounds(leafletMap)
+      )
+    );
 
     const data = getDataForHeatmap(this.props.points, this.props.leaflet.map);
 
     this._heatmap.clear();
-    this._heatmap.data(data).draw(this.getMinOpacity(this.props));
+    this._heatmap.data(data).max(totalMax).draw(this.getMinOpacity(this.props));
 
     this._frame = null;
 
