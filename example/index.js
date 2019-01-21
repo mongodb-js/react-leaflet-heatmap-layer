@@ -6,6 +6,12 @@ import { addressPoints } from './realworld.10000.js';
 
 class MapExample extends React.Component {
 
+  constructor(props) {
+    super(props);
+
+    this.toggleLimitedAddressPoints = this.toggleLimitedAddressPoints.bind(this);
+  }
+
   state = {
     mapHidden: false,
     layerHidden: false,
@@ -17,7 +23,8 @@ class MapExample extends React.Component {
   };
 
   /**
-   * Toggle limiting the address points to test behavior with refocusing/zooming when data points change
+   * Toggle limiting the address points to test behavior
+   * with refocusing/zooming when data points change
    */
   toggleLimitedAddressPoints() {
     if (this.state.limitAddressPoints) {
@@ -80,7 +87,7 @@ class MapExample extends React.Component {
         <input
           type="button"
           value="Toggle Limited Data"
-          onClick={this.toggleLimitedAddressPoints.bind(this)}
+          onClick={this.toggleLimitedAddressPoints}
         />
 
         <div>
