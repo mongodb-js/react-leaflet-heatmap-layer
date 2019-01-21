@@ -21,6 +21,7 @@ const POINTS = [
 
 const AGG = {
   data: {},
+  same: [],
   seen: 1
 };
 
@@ -145,9 +146,87 @@ describe('computeAggregate', () => {
   });
 
   describe('distinct', () => {
-    test('returns the intensity when given a single intensity', () => {
+    test('returns 1 when given a single unique intensity', () => {
       const result = computeAggregate(AGG, 5, 'distinct');
-      expect(result).toBe(5);
+      expect(result).toBe(1);
+    });
+
+    test('returns the number of unique elements when given multiple intensity points', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [5, 7],
+          intensity: 4
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 9
+        }
+      ];
+
+      const key = getKey(points[0]);
+
+      points.forEach(point => {
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        computeAggregate(aggregates[key], point.intensity, 'distinct');
+      });
+
+      expect(aggregates[key].data.distinct).toBe(3);
+    });
+
+    test('returns the number of unique elements when given duplicate intensities', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 9
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 9
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 10
+        }
+      ];
+
+      const key = getKey(points[0]);
+
+      points.forEach(point => {
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        computeAggregate(aggregates[key], point.intensity, 'distinct');
+      });
+
+      expect(aggregates[key].data.distinct).toBe(3);
     });
   });
 

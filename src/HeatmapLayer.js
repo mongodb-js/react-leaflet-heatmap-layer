@@ -4,6 +4,7 @@ import reduce from 'lodash.reduce';
 import filter from 'lodash.filter';
 import min from 'lodash.min';
 import max from 'lodash.max';
+import uniq from 'lodash.uniq';
 import isNumber from 'lodash.isnumber';
 import L from 'leaflet';
 import { MapLayer, withLeaflet } from 'react-leaflet';
@@ -86,7 +87,10 @@ export function computeAggregate(
     mean: (m, c, v) => (v - m) / c,
     count: (m, c, v) => intensity,
     sum: (m, c, v) => intensity,
-    distinct: (m, c, v) => intensity,
+    distinct: (m, c, v) => {
+      agg.same.push(v);
+      return uniq(agg.same).length;
+    },
     min: (m, c, v) => Math.min(m, v),
     max: (m, c, v) => Math.max(m, v)
   };
@@ -98,8 +102,6 @@ export function computeAggregate(
       agg.data[type] = Number.MAX_SAFE_INTEGER;
     } else if (type === 'max') {
       agg.data[type] = Number.MIN_SAFE_INTEGER;
-    } else if (type === 'distinct') {
-      agg.data[type] = [];
     } else {
       agg.data[type] = 0;
     }
@@ -300,7 +302,6 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     }
   }
 
-
   _animateZoom(e: LeafletZoomEvent): void {
     const scale = this.props.leaflet.map.getZoomScale(e.zoom);
     const offset = this.props.leaflet.map
@@ -388,6 +389,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
+            same: [],
             seen: 0
           };
         }
