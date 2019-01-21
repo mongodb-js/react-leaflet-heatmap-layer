@@ -79,7 +79,7 @@ function shouldIgnoreLocation(loc: LngLat): boolean {
 export function computeAggregate(
   agg: Object,
   intensity: number,
-  aggregateType: AggregateType
+  aggregateType: AggregateType = 'sum'
 ): number {
   /* eslint-disable no-unused-vars */
   const fns = {
