@@ -47,6 +47,8 @@ export type LeafletZoomEvent = {
   center: Object;
 }
 
+type AggregateType = 'Mean' | 'Count' | 'Sum';
+
 function isInvalid(num: number): boolean {
   return !isNumber(num) && !num;
 }
@@ -89,7 +91,8 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     maxZoom: PropTypes.number,
     minOpacity: PropTypes.number,
     blur: PropTypes.number,
-    gradient: PropTypes.object
+    gradient: PropTypes.object,
+    aggregateType: PropTypes.oneOf(['Mean', 'Count', 'Sum'])
   };
 
   createLeafletElement() {
@@ -273,6 +276,28 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     }
   }
 
+  _computeAggregate(
+    agg: Object,
+    pointCount: number,
+    intensity: number,
+    aggregateType: AggregateType
+  ): number {
+    const mean = (m, c, value) => m + (value - m) / c;
+
+    switch (aggregateType.toLowerCase()) {
+      case 'mean':
+        agg.mean = mean(agg.mean, pointCount, intensity);
+        return agg.mean;
+      case 'count':
+        agg.count += intensity;
+        return agg.count;
+      default:
+      case 'sum':
+        agg.sum += intensity;
+        return agg.sum;
+    }
+  }
+
   reset(): void {
     const topLeft = this.props.leaflet.map.containerPointToLayerPoint([0, 0]);
     L.DomUtil.setPosition(this._el, topLeft);
@@ -303,6 +328,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     const getLat = this.props.latitudeExtractor;
     const getLng = this.props.longitudeExtractor;
     const getIntensity = this.props.intensityExtractor;
+    const computeAggregate = this._computeAggregate;
 
     const inBounds = (p, bounds) => bounds.contains(p);
 
@@ -317,52 +343,82 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
       []
     );
 
-    let totalMax = 0;
+    const aggregates = {};
 
-    const accumulateInGrid = (points, leafletMap, bounds) => reduce(points, (grid, point) => {
-      const latLng = [getLat(point), getLng(point)];
-      if (isInvalidLatLngArray(latLng)) { //skip invalid points
+    const accumulateInGrid = (points, leafletMap, bounds, aggregateType) =>
+      reduce(points, (grid, point) => {
+        const latLng = [getLat(point), getLng(point)];
+
+        //skip invalid points
+        if (isInvalidLatLngArray(latLng)) {
+          return grid;
+        }
+
+        const p = leafletMap.latLngToContainerPoint(latLng);
+
+        if (!inBounds(p, bounds)) {
+          return grid;
+        }
+
+        const x = Math.floor((p.x - offsetX) / cellSize) + 2;
+        const y = Math.floor((p.y - offsetY) / cellSize) + 2;
+
+        grid[y] = grid[y] || [];
+        const cell = grid[y][x];
+
+        const key = `${x}-${y}`;
+
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {
+              sum: 0,
+              mean: 0,
+              count: 0,
+            },
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        const intensity = getIntensity(point);
+
+        const agg = computeAggregate(
+          aggregates[key].data, aggregates[key].seen,
+          intensity, aggregateType
+        );
+
+        if (!cell) {
+          grid[y][x] = [p.x, p.y, agg];
+        } else {
+          cell[0] = (cell[0] * cell[2] + p.x * agg) / (cell[2] + agg); // x
+          cell[1] = (cell[1] * cell[2] + p.y * agg) / (cell[2] + agg); // y
+          cell[2] = agg;
+        }
+
         return grid;
-      }
-
-      const p = leafletMap.latLngToContainerPoint(latLng);
-
-      if (!inBounds(p, bounds)) {
-        return grid;
-      }
-
-      const x = Math.floor((p.x - offsetX) / cellSize) + 2;
-      const y = Math.floor((p.y - offsetY) / cellSize) + 2;
-
-      grid[y] = grid[y] || [];
-      const cell = grid[y][x];
-
-      const alt = getIntensity(point);
-
-      if (!cell) {
-        grid[y][x] = [p.x, p.y, alt];
-        totalMax = Math.max(alt, totalMax);
-      } else {
-        cell[0] = (cell[0] * cell[2] + p.x * alt) / (cell[2] + alt); // x
-        cell[1] = (cell[1] * cell[2] + p.y * alt) / (cell[2] + alt); // y
-        cell[2] += alt;
-        totalMax = Math.max(cell[2], totalMax);
-      }
-
-      return grid;
-    }, []);
+      },
+      []
+    );
 
     const getBounds = () => new L.Bounds(L.point([-r, -r]), size.add([r, r]));
 
-    const getDataForHeatmap = (points, leafletMap) => roundResults(
+    const getDataForHeatmap = (points, leafletMap, aggregateType) => roundResults(
       accumulateInGrid(
         points,
         leafletMap,
-        getBounds(leafletMap)
+        getBounds(leafletMap),
+        aggregateType
       )
     );
 
-    const data = getDataForHeatmap(this.props.points, this.props.leaflet.map);
+    const data = getDataForHeatmap(
+      this.props.points,
+      this.props.leaflet.map,
+      this.props.aggregateType
+    );
+
+    const totalMax = max(data.map(m => m[2]));
 
     this._heatmap.clear();
     this._heatmap.data(data).max(totalMax).draw(this.getMinOpacity(this.props));
