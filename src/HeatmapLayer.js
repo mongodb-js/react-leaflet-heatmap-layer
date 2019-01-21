@@ -76,6 +76,46 @@ function shouldIgnoreLocation(loc: LngLat): boolean {
   return isInvalid(loc.lng) || isInvalid(loc.lat);
 }
 
+export function computeAggregate(
+  agg: Object,
+  intensity: number,
+  aggregateType: AggregateType
+): number {
+  /* eslint-disable no-unused-vars */
+  const fns = {
+    mean: (m, c, v) => (v - m) / c,
+    count: (m, c, v) => intensity,
+    sum: (m, c, v) => intensity,
+    distinct: (m, c, v) => intensity,
+    min: (m, c, v) => Math.min(m, v),
+    max: (m, c, v) => Math.max(m, v)
+  };
+
+  const type = aggregateType.toLowerCase();
+
+  if (!agg.data[type]) {
+    if (type === 'min') {
+      agg.data[type] = Number.MAX_SAFE_INTEGER;
+    } else if (type === 'max') {
+      agg.data[type] = Number.MIN_SAFE_INTEGER;
+    } else if (type === 'distinct') {
+      agg.data[type] = [];
+    } else {
+      agg.data[type] = 0;
+    }
+  }
+
+  const res = (fns[type] || fns.sum)(agg.data[type], agg.seen, intensity);
+
+  if (['min', 'max', 'distinct'].includes(type)) {
+    agg.data[type] = res;
+  } else {
+    agg.data[type] += res;
+  }
+
+  return agg.data[type];
+}
+
 export default withLeaflet(class HeatmapLayer extends MapLayer {
   static propTypes = {
     points: PropTypes.array.isRequired,
@@ -276,46 +316,6 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     }
   }
 
-  _computeAggregate(
-    agg: Object,
-    intensity: number,
-    aggregateType: AggregateType
-  ): number {
-    /* eslint-disable no-unused-vars */
-    const fns = {
-      mean: (m, c, v) => (v - m) / c,
-      count: (m, c, v) => intensity,
-      sum: (m, c, v) => intensity,
-      distinct: (m, c, v) => intensity,
-      min: (m, c, v) => Math.min(m, v),
-      max: (m, c, v) => Math.max(m, v)
-    };
-
-    const type = aggregateType.toLowerCase();
-
-    if (!agg.data[type]) {
-      if (type === 'min') {
-        agg.data[type] = Number.MAX_SAFE_INTEGER;
-      } else if (type === 'max') {
-        agg.data[type] = Number.MIN_SAFE_INTEGER;
-      } else if (type === 'distinct') {
-        agg.data[type] = [];
-      } else {
-        agg.data[type] = 0;
-      }
-    }
-
-    const res = (fns[type] || fns.sum)(agg.data[type], agg.seen, intensity);
-
-    if (['min', 'max', 'distinct'].includes(type)) {
-      agg.data[type] = res;
-    } else {
-      agg.data[type] += res;
-    }
-
-    return agg.data[type];
-  }
-
   reset(): void {
     const topLeft = this.props.leaflet.map.containerPointToLayerPoint([0, 0]);
     L.DomUtil.setPosition(this._el, topLeft);
@@ -346,7 +346,6 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     const getLat = this.props.latitudeExtractor;
     const getLng = this.props.longitudeExtractor;
     const getIntensity = this.props.intensityExtractor;
-    const computeAggregate = this._computeAggregate;
 
     const inBounds = (p, bounds) => bounds.contains(p);
 
