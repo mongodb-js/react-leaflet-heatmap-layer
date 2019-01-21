@@ -47,7 +47,7 @@ export type LeafletZoomEvent = {
   center: Object;
 }
 
-type AggregateType = 'Mean' | 'Count' | 'Sum';
+type AggregateType = 'mean' | 'count' | 'sum' | 'distinct' | 'min' | 'max';
 
 function isInvalid(num: number): boolean {
   return !isNumber(num) && !num;
@@ -92,7 +92,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     minOpacity: PropTypes.number,
     blur: PropTypes.number,
     gradient: PropTypes.object,
-    aggregateType: PropTypes.oneOf(['Mean', 'Count', 'Sum'])
+    aggregateType: PropTypes.oneOf(['mean', 'count', 'sum', 'distinct', 'min', 'max'])
   };
 
   createLeafletElement() {
@@ -278,24 +278,42 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
 
   _computeAggregate(
     agg: Object,
-    pointCount: number,
     intensity: number,
     aggregateType: AggregateType
   ): number {
-    const mean = (m, c, value) => m + (value - m) / c;
+    /* eslint-disable no-unused-vars */
+    const fns = {
+      mean: (m, c, v) => (v - m) / c,
+      count: (m, c, v) => intensity,
+      sum: (m, c, v) => intensity,
+      distinct: (m, c, v) => intensity,
+      min: (m, c, v) => Math.min(m, v),
+      max: (m, c, v) => Math.max(m, v)
+    };
 
-    switch (aggregateType.toLowerCase()) {
-      case 'mean':
-        agg.mean = mean(agg.mean, pointCount, intensity);
-        return agg.mean;
-      case 'count':
-        agg.count += intensity;
-        return agg.count;
-      default:
-      case 'sum':
-        agg.sum += intensity;
-        return agg.sum;
+    const type = aggregateType.toLowerCase();
+
+    if (!agg.data[type]) {
+      if (type === 'min') {
+        agg.data[type] = Number.MAX_SAFE_INTEGER;
+      } else if (type === 'max') {
+        agg.data[type] = Number.MIN_SAFE_INTEGER;
+      } else if (type === 'distinct') {
+        agg.data[type] = [];
+      } else {
+        agg.data[type] = 0;
+      }
     }
+
+    const res = (fns[type] || fns.sum)(agg.data[type], agg.seen, intensity);
+
+    if (['min', 'max', 'distinct'].includes(type)) {
+      agg.data[type] = res;
+    } else {
+      agg.data[type] += res;
+    }
+
+    return agg.data[type];
   }
 
   reset(): void {
@@ -370,11 +388,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
 
         if (!aggregates[key]) {
           aggregates[key] = {
-            data: {
-              sum: 0,
-              mean: 0,
-              count: 0,
-            },
+            data: {},
             seen: 0
           };
         }
@@ -382,11 +396,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
         aggregates[key].seen++;
 
         const intensity = getIntensity(point);
-
-        const agg = computeAggregate(
-          aggregates[key].data, aggregates[key].seen,
-          intensity, aggregateType
-        );
+        const agg = computeAggregate(aggregates[key], intensity, aggregateType);
 
         if (!cell) {
           grid[y][x] = [p.x, p.y, agg];
