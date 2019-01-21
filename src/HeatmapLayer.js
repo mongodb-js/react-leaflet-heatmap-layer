@@ -175,27 +175,27 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     this.updateHeatmapProps(this.getHeatmapProps(this.props));
   }
 
-  getMax(props) {
+  getMax(props: Object): number {
     return props.max || 3.0;
   }
 
-  getRadius(props) {
+  getRadius(props: Object): number {
     return props.radius || 30;
   }
 
-  getMaxZoom(props) {
+  getMaxZoom(props: Object): number {
     return props.maxZoom || 18;
   }
 
-  getMinOpacity(props) {
+  getMinOpacity(props: Object): number {
     return props.minOpacity || 0.01;
   }
 
-  getBlur(props) {
+  getBlur(props: Object): number {
     return props.blur || 15;
   }
 
-  getHeatmapProps(props) {
+  getHeatmapProps(props: Object): Object {
     return {
       minOpacity: this.getMinOpacity(props),
       maxZoom: this.getMaxZoom(props),

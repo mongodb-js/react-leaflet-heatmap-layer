@@ -156,12 +156,80 @@ describe('computeAggregate', () => {
       const result = computeAggregate(AGG, 5, 'min');
       expect(result).toBe(5);
     });
+
+    test('returns the min intensity value when given multiple points at the same location', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [5, 7],
+          intensity: 4
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 9
+        }
+      ];
+
+      const key = getKey(points[0]);
+
+      points.forEach(point => {
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            seen: 0
+          };
+        }
+
+        computeAggregate(aggregates[key], point.intensity, 'min');
+      });
+
+      expect(aggregates[key].data.min).toBe(2);
+    });
   });
 
   describe('max', () => {
     test('returns the intensity when given a single intensity', () => {
       const result = computeAggregate(AGG, 5, 'max');
       expect(result).toBe(5);
+    });
+
+    test('returns the max intensity value when given multiple points at the same location', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [5, 7],
+          intensity: 4
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 9
+        }
+      ];
+
+      const key = getKey(points[0]);
+
+      points.forEach(point => {
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            seen: 0
+          };
+        }
+
+        computeAggregate(aggregates[key], point.intensity, 'max');
+      });
+
+      expect(aggregates[key].data.max).toBe(9);
     });
   });
 });
