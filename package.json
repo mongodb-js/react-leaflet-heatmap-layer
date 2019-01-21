@@ -7,6 +7,8 @@
     "compile": "npm run clean; npm run transpile",
     "transpile": "./node_modules/.bin/babel src/HeatmapLayer.js --out-file lib/HeatmapLayer.js",
     "clean": "rm -rf ./lib/*",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "example": "webpack-dev-server --config ./example/webpack.config.js",
     "lint": "eslint ./src ./example/index.js"
   },
@@ -50,6 +52,7 @@
     "eslint-plugin-arrow-function": "^2.0.0",
     "eslint-plugin-lean-imports": "^0.3.3",
     "eslint-plugin-react": "^4.2.3",
+    "jest": "^23.6.0",
     "leaflet": "^1.0.0",
     "prop-types": "^15.5.10",
     "react": "^16.0.0",
