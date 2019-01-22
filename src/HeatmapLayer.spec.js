@@ -145,6 +145,55 @@ describe('computeAggregate', () => {
         expect(result).toBe(average);
       });
     });
+
+    test('computes a final average for all points', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [5, 7],
+          intensity: 4
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 3
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 9
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 11
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 6
+        }
+      ];
+
+      const key = getKey(points[0]);
+
+      points.forEach(point => {
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        computeAggregate(aggregates[key], point.intensity, 'mean');
+      });
+
+      expect(aggregates[key].data.mean).toBe(5.833333333333333);
+    });
   });
 
   describe('distinct', () => {
