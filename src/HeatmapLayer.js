@@ -95,7 +95,7 @@ export function computeAggregate(
   /* eslint-disable no-unused-vars */
   const fns = {
     mean: (m, c, v) => (v - m) / c,
-    count: (m, c, v) => intensity,
+    count: (m, c, v) => 1,
     sum: (m, c, v) => intensity,
     distinct: (m, c, v) => {
       agg.same.push(v);

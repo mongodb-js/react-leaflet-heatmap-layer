@@ -79,9 +79,9 @@ describe('computeAggregate', () => {
   });
 
   describe('count', () => {
-    test('returns the intensity when given a single intensity', () => {
+    test('returns 1 when given a single intensity', () => {
       const result = computeAggregate(AGG, 5, 'count');
-      expect(result).toBe(5);
+      expect(result).toBe(1);
     });
 
     test('increments the count for the same point each time', () => {
@@ -89,7 +89,7 @@ describe('computeAggregate', () => {
 
       const point = {
         coordinates: [5, 5],
-        intensity: 1
+        intensity: 3
       };
 
       const key = getKey(point);
