@@ -48,7 +48,8 @@ export type LeafletZoomEvent = {
   center: Object;
 }
 
-type AggregateType = 'mean' | 'count' | 'sum' | 'distinct' | 'min' | 'max';
+type AggregateType = 'mean' | 'count' | 'sum' | 'distinct' | 'min' | 'max'
+  | 'variance' | 'variancep' | 'stdev' | 'stdevp' ;
 
 function isInvalid(num: number): boolean {
   return !isNumber(num) && !num;
@@ -82,6 +83,15 @@ export function computeAggregate(
   intensity: number,
   aggregateType: AggregateType = 'sum'
 ): number {
+  /* eslint-disable no-use-before-define */
+  const updateMeanAndSigma = (m, c, v) => {
+    const newMean = agg.data.mean + fns.mean(agg.data.mean, c, v);
+
+    agg.data.sigma += (v - newMean) * (v - agg.data.mean);
+
+    agg.data.mean = newMean;
+  };
+
   /* eslint-disable no-unused-vars */
   const fns = {
     mean: (m, c, v) => (v - m) / c,
@@ -92,7 +102,17 @@ export function computeAggregate(
       return uniq(agg.same).length;
     },
     min: (m, c, v) => Math.min(m, v),
-    max: (m, c, v) => Math.max(m, v)
+    max: (m, c, v) => Math.max(m, v),
+    variance: (m, c, v) => {
+      updateMeanAndSigma(m, c, v);
+      return c > 1 ? agg.data.sigma / (c - 1) : 0;
+    },
+    variancep: (m, c, v) => {
+      updateMeanAndSigma(m, c, v);
+      return c > 1 ? agg.data.sigma / c : 0;
+    },
+    stdev: (m, c, v) => Math.sqrt(fns.variance(m, c, v)),
+    stdevp: (m, c, v) => Math.sqrt(fns.variancep(m, c, v))
   };
 
   const type = aggregateType.toLowerCase();
@@ -102,6 +122,16 @@ export function computeAggregate(
       agg.data[type] = Number.MAX_SAFE_INTEGER;
     } else if (type === 'max') {
       agg.data[type] = Number.MIN_SAFE_INTEGER;
+    } else if (['stdev', 'stdevp', 'variance', 'variancep'].includes(type)) {
+      if (!agg.data.mean) {
+        agg.data.mean = 0;
+      }
+
+      if (!agg.data.sigma) {
+        agg.data.sigma = 0;
+      }
+
+      agg.data[type] = 0;
     } else {
       agg.data[type] = 0;
     }
@@ -109,10 +139,10 @@ export function computeAggregate(
 
   const res = (fns[type] || fns.sum)(agg.data[type], agg.seen, intensity);
 
-  if (['min', 'max', 'distinct'].includes(type)) {
-    agg.data[type] = res;
-  } else {
+  if (['mean', 'count', 'sum'].includes(type)) {
     agg.data[type] += res;
+  } else {
+    agg.data[type] = res;
   }
 
   return agg.data[type];
@@ -134,7 +164,10 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     minOpacity: PropTypes.number,
     blur: PropTypes.number,
     gradient: PropTypes.object,
-    aggregateType: PropTypes.oneOf(['mean', 'count', 'sum', 'distinct', 'min', 'max'])
+    aggregateType: PropTypes.oneOf([
+      'mean', 'count', 'sum', 'distinct', 'min', 'max',
+      'variance', 'variancep', 'stdev', 'stdevp'
+    ])
   };
 
   createLeafletElement() {

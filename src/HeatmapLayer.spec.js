@@ -45,6 +45,8 @@ describe('computeAggregate', () => {
           seen: 0
         };
 
+        aggregates[key].seen++;
+
         const result = computeAggregate(aggregates[key], point.intensity, 'sum');
         expect(result).toBe(point.intensity);
       });
@@ -180,6 +182,8 @@ describe('computeAggregate', () => {
           };
         }
 
+        aggregates[key].seen++;
+
         computeAggregate(aggregates[key], point.intensity, 'distinct');
       });
 
@@ -223,6 +227,8 @@ describe('computeAggregate', () => {
           };
         }
 
+        aggregates[key].seen++;
+
         computeAggregate(aggregates[key], point.intensity, 'distinct');
       });
 
@@ -236,7 +242,7 @@ describe('computeAggregate', () => {
       expect(result).toBe(5);
     });
 
-    test('returns the min intensity value when given multiple points at the same location', () => {
+    test('returns the min intensity value when given points at the same location', () => {
       const aggregates = {};
 
       const points = [
@@ -260,9 +266,12 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
+            same: [],
             seen: 0
           };
         }
+
+        aggregates[key].seen++;
 
         computeAggregate(aggregates[key], point.intensity, 'min');
       });
@@ -277,7 +286,7 @@ describe('computeAggregate', () => {
       expect(result).toBe(5);
     });
 
-    test('returns the max intensity value when given multiple points at the same location', () => {
+    test('returns the max intensity value when given points at the same location', () => {
       const aggregates = {};
 
       const points = [
@@ -301,14 +310,413 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
+            same: [],
             seen: 0
           };
         }
+
+        aggregates[key].seen++;
 
         computeAggregate(aggregates[key], point.intensity, 'max');
       });
 
       expect(aggregates[key].data.max).toBe(9);
+    });
+  });
+
+  describe('stdev', () => {
+    test('returns 0 when given a single intensity', () => {
+      const result = computeAggregate(AGG, 5, 'stdev');
+      expect(result).toBe(0);
+    });
+
+    test('returns the stdev when given points at the same location', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 5
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 1
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 89
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 6
+        }
+      ];
+
+      const key = getKey(points[0]);
+
+      points.forEach(point => {
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        computeAggregate(aggregates[key], point.intensity, 'stdev');
+      });
+
+      expect(aggregates[key].data.stdev).toBe(38.29229687548136);
+    });
+
+    test('returns the stdev when given points at different locations', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [6, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [9, 2],
+          intensity: 5
+        },
+        {
+          coordinates: [6, 7],
+          intensity: 1
+        },
+        {
+          coordinates: [6, 7],
+          intensity: 89
+        },
+        {
+          coordinates: [1, 4],
+          intensity: 6
+        }
+      ];
+
+      const targetKey = getKey(points[0]);
+
+      points.forEach(point => {
+        const key = getKey(point);
+
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        computeAggregate(aggregates[key], point.intensity, 'stdev');
+      });
+
+      expect(aggregates[targetKey].data.stdev).toBe(50.52062285179522);
+    });
+  });
+
+  describe('stdevp', () => {
+    test('returns 0 when given a single intensity', () => {
+      const result = computeAggregate(AGG, 5, 'stdevp');
+      expect(result).toBe(0);
+    });
+
+    test('returns the population stdev when given points at the same location', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 5
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 1
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 89
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 6
+        }
+      ];
+
+      const key = getKey(points[0]);
+
+      points.forEach(point => {
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        computeAggregate(aggregates[key], point.intensity, 'stdevp');
+      });
+
+      expect(aggregates[key].data.stdevp).toBe(34.24967153127165);
+    });
+
+    test('returns the population stdev when given points at different locations', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [6, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [9, 2],
+          intensity: 5
+        },
+        {
+          coordinates: [6, 7],
+          intensity: 1
+        },
+        {
+          coordinates: [6, 7],
+          intensity: 89
+        },
+        {
+          coordinates: [1, 4],
+          intensity: 6
+        }
+      ];
+
+      const targetKey = getKey(points[0]);
+
+      points.forEach(point => {
+        const key = getKey(point);
+
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        computeAggregate(aggregates[key], point.intensity, 'stdevp');
+      });
+
+      expect(aggregates[targetKey].data.stdevp).toBe(41.24991582482994);
+    });
+  });
+
+  describe('variance', () => {
+    test('returns 0 when given a single intensity', () => {
+      const result = computeAggregate(AGG, 5, 'variance');
+      expect(result).toBe(0);
+    });
+
+    test('returns the sample variance when given points at the same location', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 5
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 1
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 89
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 6
+        }
+      ];
+
+      const key = getKey(points[0]);
+
+      points.forEach(point => {
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        computeAggregate(aggregates[key], point.intensity, 'variance');
+      });
+
+      expect(aggregates[key].data.variance).toBe(1466.3);
+    });
+
+    test('returns the sample variance when given points at different locations', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [6, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [9, 2],
+          intensity: 5
+        },
+        {
+          coordinates: [6, 7],
+          intensity: 1
+        },
+        {
+          coordinates: [6, 7],
+          intensity: 89
+        },
+        {
+          coordinates: [1, 4],
+          intensity: 6
+        }
+      ];
+
+      const targetKey = getKey(points[0]);
+
+      points.forEach(point => {
+        const key = getKey(point);
+
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        computeAggregate(aggregates[key], point.intensity, 'variance');
+      });
+
+      expect(aggregates[targetKey].data.variance).toBe(2552.333333333333);
+    });
+  });
+
+  describe('variancep', () => {
+    test('returns 0 when given a single intensity', () => {
+      const result = computeAggregate(AGG, 5, 'variancep');
+      expect(result).toBe(0);
+    });
+
+    test('returns the population variance when given points at the same location', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [5, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 5
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 1
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 89
+        },
+        {
+          coordinates: [5, 7],
+          intensity: 6
+        }
+      ];
+
+      const key = getKey(points[0]);
+
+      points.forEach(point => {
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        computeAggregate(aggregates[key], point.intensity, 'variancep');
+      });
+
+      expect(aggregates[key].data.variancep).toBe(1173.04);
+    });
+
+    test('returns the population variance when given points at different locations', () => {
+      const aggregates = {};
+
+      const points = [
+        {
+          coordinates: [6, 7],
+          intensity: 2
+        },
+        {
+          coordinates: [9, 2],
+          intensity: 5
+        },
+        {
+          coordinates: [6, 7],
+          intensity: 1
+        },
+        {
+          coordinates: [6, 7],
+          intensity: 89
+        },
+        {
+          coordinates: [1, 4],
+          intensity: 6
+        }
+      ];
+
+      const targetKey = getKey(points[0]);
+
+      points.forEach(point => {
+        const key = getKey(point);
+
+        if (!aggregates[key]) {
+          aggregates[key] = {
+            data: {},
+            same: [],
+            seen: 0
+          };
+        }
+
+        aggregates[key].seen++;
+
+        computeAggregate(aggregates[key], point.intensity, 'variancep');
+      });
+
+      expect(aggregates[targetKey].data.variancep).toBe(1701.5555555555554);
     });
   });
 });
