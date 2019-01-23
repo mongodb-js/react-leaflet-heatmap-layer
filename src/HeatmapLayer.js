@@ -4,7 +4,6 @@ import reduce from 'lodash.reduce';
 import filter from 'lodash.filter';
 import min from 'lodash.min';
 import max from 'lodash.max';
-import uniq from 'lodash.uniq';
 import isNumber from 'lodash.isnumber';
 import L from 'leaflet';
 import { MapLayer, withLeaflet } from 'react-leaflet';
@@ -99,7 +98,7 @@ export function computeAggregate(
     sum: (m, c, v) => v,
     distinct: (m, c, v) => {
       agg.same.push(v);
-      return uniq(agg.same).length;
+      return new Set(agg.same).size;
     },
     min: (m, c, v) => Math.min(m, v),
     max: (m, c, v) => Math.max(m, v),

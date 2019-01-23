@@ -1,4 +1,8 @@
 {
+  "presets": [
+    ["minify", { "builtIns": false }],
+    "es2015"
+  ],
   "plugins": [
     "babel-plugin-transform-do-expressions",
     "babel-plugin-transform-function-bind",
