@@ -96,7 +96,7 @@ export function computeAggregate(
   const fns = {
     mean: (m, c, v) => (v - m) / c,
     count: (m, c, v) => 1,
-    sum: (m, c, v) => intensity,
+    sum: (m, c, v) => v,
     distinct: (m, c, v) => {
       agg.same.push(v);
       return uniq(agg.same).length;
