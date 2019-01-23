@@ -50,6 +50,24 @@ export type LeafletZoomEvent = {
 type AggregateType = 'mean' | 'count' | 'sum' | 'distinct' | 'min' | 'max'
   | 'variance' | 'variancep' | 'stdev' | 'stdevp' ;
 
+type Aggregation = {
+  data: {
+    mean: number,
+    sigma: number,
+    count: number,
+    sum: number,
+    distinct: number,
+    min: number,
+    max: number,
+    variance: number,
+    variancep: number,
+    stdev: number,
+    stdevp: number
+  },
+  same: Set,
+  seen: number
+};
+
 function isInvalid(num: number): boolean {
   return !isNumber(num) && !num;
 }
@@ -78,7 +96,7 @@ function shouldIgnoreLocation(loc: LngLat): boolean {
 }
 
 export function computeAggregate(
-  agg: Object,
+  agg: Aggregation,
   intensity: number,
   aggregateType: AggregateType = 'sum'
 ): number {
@@ -97,8 +115,8 @@ export function computeAggregate(
     count: (m, c, v) => 1,
     sum: (m, c, v) => v,
     distinct: (m, c, v) => {
-      agg.same.push(v);
-      return new Set(agg.same).size;
+      agg.same.add(v);
+      return agg.same.size;
     },
     min: (m, c, v) => Math.min(m, v),
     max: (m, c, v) => Math.max(m, v),
@@ -161,6 +179,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     radius: PropTypes.number,
     maxZoom: PropTypes.number,
     minOpacity: PropTypes.number,
+    useLocalExtrema: PropTypes.bool,
     blur: PropTypes.number,
     gradient: PropTypes.object,
     aggregateType: PropTypes.oneOf([
@@ -421,7 +440,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -464,7 +483,13 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     const totalMax = max(data.map(m => m[2]));
 
     this._heatmap.clear();
-    this._heatmap.data(data).max(totalMax).draw(this.getMinOpacity(this.props));
+    this._heatmap.data(data)
+
+    if (this.props.useLocalExtrema) {
+      this.updateHeatmapMax(totalMax);
+    }
+
+    this._heatmap.draw(this.getMinOpacity(this.props));
 
     this._frame = null;
 

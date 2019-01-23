@@ -21,7 +21,7 @@ const POINTS = [
 
 const AGG = {
   data: {},
-  same: [],
+  same: new Set(),
   seen: 1
 };
 
@@ -182,7 +182,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -226,7 +226,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -271,7 +271,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -315,7 +315,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -359,7 +359,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -411,7 +411,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -458,7 +458,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -510,7 +510,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -557,7 +557,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -609,7 +609,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -656,7 +656,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -708,7 +708,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
@@ -755,7 +755,7 @@ describe('computeAggregate', () => {
         if (!aggregates[key]) {
           aggregates[key] = {
             data: {},
-            same: [],
+            same: new Set(),
             seen: 0
           };
         }
