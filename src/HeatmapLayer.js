@@ -211,23 +211,23 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
   }
 
   getMax(props: Object): number {
-    return props.max || 3.0;
+    return isNumber(props.max) ? props.max : 3.0;
   }
 
   getRadius(props: Object): number {
-    return props.radius || 30;
+    return isNumber(props.radius) ? props.radius : 30;
   }
 
   getMaxZoom(props: Object): number {
-    return props.maxZoom || 18;
+    return isNumber(props.maxZoom) ? props.maxZoom : 18;
   }
 
   getMinOpacity(props: Object): number {
-    return props.minOpacity || 0.01;
+    return isNumber(props.minOpacity) ? props.minOpacity : 0.01;
   }
 
   getBlur(props: Object): number {
-    return props.blur || 15;
+    return isNumber(props.blur) ? props.blur : 15;
   }
 
   getHeatmapProps(props: Object): Object {
@@ -273,7 +273,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
    * Update the heatmap's radius and blur (blur is optional)
    */
   updateHeatmapRadius(radius: number, blur: ?number): void {
-    if (radius) {
+    if (isNumber(radius)) {
       this._heatmap.radius(radius, blur);
     }
   }
@@ -291,7 +291,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
    * Update the heatmap's maximum
    */
   updateHeatmapMax(maximum: number): void {
-    if (maximum) {
+    if (isNumber(maximum)) {
       this._heatmap.max(maximum);
     }
   }
