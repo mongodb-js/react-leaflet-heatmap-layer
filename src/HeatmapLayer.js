@@ -3,8 +3,9 @@ import map from 'lodash.map';
 import reduce from 'lodash.reduce';
 import filter from 'lodash.filter';
 import min from 'lodash.min';
+import minBy from 'lodash.minby';
 import max from 'lodash.max';
-import get from 'lodash.get';
+import maxBy from 'lodash.maxby';
 import isNumber from 'lodash.isnumber';
 import L from 'leaflet';
 import { MapLayer, withLeaflet } from 'react-leaflet';
@@ -175,17 +176,6 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     fitBoundsOnLoad: PropTypes.bool,
     fitBoundsOnUpdate: PropTypes.bool,
     onStatsUpdate: PropTypes.func,
-    bounds: PropTypes.shape({
-      ne: PropTypes.shape({
-        lat: PropTypes.number,
-        lng: PropTypes.number
-      }),
-      sw: PropTypes.shape({
-        lat: PropTypes.number,
-        lng: PropTypes.number
-      })
-    }),
-    zoom: PropTypes.number,
     /* props controlling heatmap generation */
     max: PropTypes.number,
     radius: PropTypes.number,
@@ -334,9 +324,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
   fitBounds(): void {
     const {
       points,
-      zoom,
       leaflet,
-      bounds,
       longitudeExtractor,
       latitudeExtractor
     } = this.props;
@@ -344,15 +332,11 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     const lngs = map(points, longitudeExtractor);
     const lats = map(points, latitudeExtractor);
 
-    const ne = get(bounds, 'ne', { lng: max(lngs), lat: max(lats) });
-    const sw = get(bounds, 'sw', { lng: min(lngs), lat: min(lats) });
+    const ne = { lng: max(lngs), lat: max(lats) }
+    const sw = { lng: min(lngs), lat: min(lats) }
 
     if (shouldIgnoreLocation(ne) || shouldIgnoreLocation(sw)) {
       return;
-    }
-
-    if (zoom) {
-      leaflet.map.setZoom(zoom);
     }
 
     leaflet.map.fitBounds(L.latLngBounds(L.latLng(sw), L.latLng(ne)));
@@ -508,7 +492,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
       this.props.aggregateType
     );
 
-    const totalMax = max(data.map(m => m[2]));
+    const totalMax = maxBy(data, m => m[2]);
 
     this._heatmap.clear();
     this._heatmap.data(data);
@@ -522,16 +506,9 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     this._frame = null;
 
     if (this.props.onStatsUpdate && this.props.points && this.props.points.length > 0) {
-      const bounds = this.props.leaflet.map.getBounds();
-
       this.props.onStatsUpdate({
-        min: min(data.map(m => m[2])),
-        max: totalMax,
-        bounds: {
-          ne: bounds._northEast,
-          sw: bounds._southWest
-        },
-        zoom: this.props.leaflet.map.getZoom()
+        min: minBy(data, m => m[2]),
+        max: totalMax
       });
     }
   }

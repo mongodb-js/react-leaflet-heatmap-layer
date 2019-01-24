@@ -111,9 +111,6 @@ The `HeatmapLayer` component takes the following props:
 - `intensityExtractor`: *required* a function that returns the object's intensity e.g. `marker => marker.val`
 - `fitBoundsOnLoad`: boolean indicating whether map should fit data in bounds of map on load
 - `fitBoundsOnUpdate`: boolean indicating whether map should fit data in bounds of map on Update
-- `bounds`: object containing `ne` and `sw` bounds, each containing a `lat` and `lng` number. If `fitBoundsOnLoad` is
-true, these bounds will be set on load
-- `zoom`: number containing a zoom level. If `fitBoundsOnLoad` is true, this zoom level will be set on load
 - `max`: max intensity value for heatmap (default: 3.0)
 - `radius`: radius for heatmap points (default: 30)
 - `maxZoom`: maximum zoom for heatmap (default: 18)
@@ -121,11 +118,9 @@ true, these bounds will be set on load
 - `useLocalExtrema`: whether to always have a local minimum and maximum in the viewport (default: false)
 - `blur`: blur for heatmap points (default: 15)
 - `gradient`: object defining gradient stop points for heatmap e.g. `{ 0.4: 'blue', 0.8: 'orange', 1.0: 'red' }` (default: `simpleheat` package default gradient)
-- `onStatsUpdate`: called on redraw with a { min, max, bounds, zoom } object containing:
+- `onStatsUpdate`: called on redraw with a { min, max } object containing:
   - The global minimum (or local minimum if `useLocalExtrema` is true)
   - The global maximum (or local maximum if `useLocalExtrema` is true)
-  - An object containing the leaflet bounds
-  - The maps zoom level
 
 ## Example
 
