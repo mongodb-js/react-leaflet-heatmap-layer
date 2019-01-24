@@ -4,6 +4,7 @@ import reduce from 'lodash.reduce';
 import filter from 'lodash.filter';
 import min from 'lodash.min';
 import max from 'lodash.max';
+import get from 'lodash.get';
 import isNumber from 'lodash.isnumber';
 import L from 'leaflet';
 import { MapLayer, withLeaflet } from 'react-leaflet';
@@ -174,6 +175,17 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     fitBoundsOnLoad: PropTypes.bool,
     fitBoundsOnUpdate: PropTypes.bool,
     onStatsUpdate: PropTypes.func,
+    bounds: PropTypes.shape({
+      ne: PropTypes.shape({
+        lat: PropTypes.number,
+        lng: PropTypes.number
+      }),
+      sw: PropTypes.shape({
+        lat: PropTypes.number,
+        lng: PropTypes.number
+      })
+    }),
+    zoom: PropTypes.number,
     /* props controlling heatmap generation */
     max: PropTypes.number,
     radius: PropTypes.number,
@@ -224,6 +236,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     if (this.props.fitBoundsOnLoad) {
       this.fitBounds();
     }
+
     this.attachEvents();
     this.updateHeatmapProps(this.getHeatmapProps(this.props));
   }
@@ -319,24 +332,39 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
   }
 
   fitBounds(): void {
-    const points = this.props.points;
-    const lngs = map(points, this.props.longitudeExtractor);
-    const lats = map(points, this.props.latitudeExtractor);
-    const ne = { lng: max(lngs), lat: max(lats) };
-    const sw = { lng: min(lngs), lat: min(lats) };
+    const {
+      points,
+      zoom,
+      leaflet,
+      bounds,
+      longitudeExtractor,
+      latitudeExtractor
+    } = this.props;
+
+    const lngs = map(points, longitudeExtractor);
+    const lats = map(points, latitudeExtractor);
+
+    const ne = get(bounds, 'ne', { lng: max(lngs), lat: max(lats) });
+    const sw = get(bounds, 'sw', { lng: min(lngs), lat: min(lats) });
 
     if (shouldIgnoreLocation(ne) || shouldIgnoreLocation(sw)) {
       return;
     }
 
-    this.props.leaflet.map.fitBounds(L.latLngBounds(L.latLng(sw), L.latLng(ne)));
+    if (zoom) {
+      leaflet.map.setZoom(zoom);
+    }
+
+    leaflet.map.fitBounds(L.latLngBounds(L.latLng(sw), L.latLng(ne)));
   }
 
   componentDidUpdate(): void {
     this.props.leaflet.map.invalidateSize();
+
     if (this.props.fitBoundsOnUpdate) {
       this.fitBounds();
     }
+
     this.reset();
   }
 
@@ -483,7 +511,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     const totalMax = max(data.map(m => m[2]));
 
     this._heatmap.clear();
-    this._heatmap.data(data)
+    this._heatmap.data(data);
 
     if (this.props.useLocalExtrema) {
       this.updateHeatmapMax(totalMax);
@@ -494,13 +522,17 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     this._frame = null;
 
     if (this.props.onStatsUpdate && this.props.points && this.props.points.length > 0) {
-      this.props.onStatsUpdate(
-        reduce(data, (stats, point) => {
-          stats.max = point[3] > stats.max ? point[3] : stats.max;
-          stats.min = point[3] < stats.min ? point[3] : stats.min;
-          return stats;
-        }, { min: Infinity, max: -Infinity })
-      );
+      const bounds = this.props.leaflet.map.getBounds();
+
+      this.props.onStatsUpdate({
+        min: min(data.map(m => m[2])),
+        max: totalMax,
+        bounds: {
+          ne: bounds._northEast,
+          sw: bounds._southWest
+        },
+        zoom: this.props.leaflet.map.getZoom()
+      });
     }
   }
 
