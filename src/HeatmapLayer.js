@@ -3,9 +3,7 @@ import map from 'lodash.map';
 import reduce from 'lodash.reduce';
 import filter from 'lodash.filter';
 import min from 'lodash.min';
-import minBy from 'lodash.minby';
 import max from 'lodash.max';
-import maxBy from 'lodash.maxby';
 import isNumber from 'lodash.isnumber';
 import L from 'leaflet';
 import { MapLayer, withLeaflet } from 'react-leaflet';
@@ -492,22 +490,22 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
       this.props.aggregateType
     );
 
-    const totalMax = maxBy(data, m => m[2]);
+    const totalMax = max(data.map(m => m[2]));
 
     this._heatmap.clear();
     this._heatmap.data(data);
 
-    if (this.props.useLocalExtrema && totalMax) {
-      this.updateHeatmapMax(totalMax[2]);
+    if (this.props.useLocalExtrema) {
+      this.updateHeatmapMax(totalMax);
     }
 
     this._heatmap.draw(this.getMinOpacity(this.props));
 
     this._frame = null;
 
-    if (this.props.onStatsUpdate && this.props.points && this.props.points.length > 0 && totalMax) {
+    if (this.props.onStatsUpdate && this.props.points && this.props.points.length > 0) {
       this.props.onStatsUpdate({
-        min: totalMax[2],
+        min: min(data.map(m => m[2])),
         max: totalMax
       });
     }
