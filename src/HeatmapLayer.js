@@ -492,7 +492,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
       this.props.aggregateType
     );
 
-    const totalMax = maxBy(data, m => m[2]);
+    const totalMax = maxBy(data, m => m[2])[2];
 
     this._heatmap.clear();
     this._heatmap.data(data);
@@ -507,7 +507,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
 
     if (this.props.onStatsUpdate && this.props.points && this.props.points.length > 0) {
       this.props.onStatsUpdate({
-        min: minBy(data, m => m[2]),
+        min: minBy(data, m => m[2])[2],
         max: totalMax
       });
     }

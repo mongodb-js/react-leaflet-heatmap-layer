@@ -119,8 +119,8 @@ The `HeatmapLayer` component takes the following props:
 - `blur`: blur for heatmap points (default: 15)
 - `gradient`: object defining gradient stop points for heatmap e.g. `{ 0.4: 'blue', 0.8: 'orange', 1.0: 'red' }` (default: `simpleheat` package default gradient)
 - `onStatsUpdate`: called on redraw with a { min, max } object containing:
-  - The global minimum (or local minimum if `useLocalExtrema` is true)
-  - The global maximum (or local maximum if `useLocalExtrema` is true)
+  - The local minimum
+  - The local maximum
 
 ## Example
 
