@@ -114,6 +114,7 @@ The `HeatmapLayer` component takes the following props:
 - `max`: max intensity value for heatmap (default: 3.0)
 - `radius`: radius for heatmap points (default: 30)
 - `maxZoom`: maximum zoom for heatmap (default: 18)
+- `opacity`: the opacity of the heatmap layer (default: 1)
 - `minOpacity`: minimum opacity for heatmap (default: 0.01)
 - `useLocalExtrema`: whether to always have a local minimum and maximum in the viewport (default: false)
 - `blur`: blur for heatmap points (default: 15)

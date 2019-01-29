@@ -178,6 +178,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     max: PropTypes.number,
     radius: PropTypes.number,
     maxZoom: PropTypes.number,
+    opacity: PropTypes.number,
     minOpacity: PropTypes.number,
     useLocalExtrema: PropTypes.bool,
     blur: PropTypes.number,
@@ -241,6 +242,10 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
     return isNumber(props.maxZoom) ? props.maxZoom : 18;
   }
 
+  getOpacity(props: Object): number {
+    return isNumber(props.opacity) ? props.opacity : 1;
+  }
+
   getMinOpacity(props: Object): number {
     return isNumber(props.minOpacity) ? props.minOpacity : 0.01;
   }
@@ -251,6 +256,7 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
 
   getHeatmapProps(props: Object): Object {
     return {
+      opacity: this.getOpacity(props),
       minOpacity: this.getMinOpacity(props),
       maxZoom: this.getMaxZoom(props),
       radius: this.getRadius(props),
@@ -509,6 +515,8 @@ export default withLeaflet(class HeatmapLayer extends MapLayer {
         max: totalMax
       });
     }
+
+    this._heatmap._canvas.style.opacity = this.getOpacity(this.props);
   }
 
 
