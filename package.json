@@ -71,7 +71,7 @@
     "eslint-plugin-arrow-function": "^2.0.0",
     "eslint-plugin-lean-imports": "^0.3.3",
     "eslint-plugin-react": "^4.2.3",
-    "jest": "^23.6.0",
+    "jest": "^24.9.0",
     "leaflet": "^1.0.0",
     "prop-types": "^15.6.2",
     "react": "^16.0.0",
