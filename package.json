@@ -80,7 +80,7 @@
     "react-hot-loader": "^4.12.13",
     "react-leaflet": "^2.0.0",
     "react-transform-hmr": "^1.0.4",
-    "webpack": "^1.12.14",
+    "webpack": "^2.7.0",
     "webpack-dev-server": "^1.14.1"
   },
   "dependencies": {
